@@ -64,7 +64,7 @@ function setupEventListeners() {
 
     // Formulário de Login
     document.getElementById('login-form').addEventListener('submit', (e) => {
-        e.preventDefault();
+        e.preventDefault(); // GARANTIA DE QUE O RECARREGAMENTO É IMPEDIDO
         const email = document.getElementById('login-input').value;
         const password = document.getElementById('password-login').value;
         handleSignIn(email, password);
