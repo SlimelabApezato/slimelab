@@ -35,7 +35,8 @@ export async function initializeGameState(user) {
     // Se o perfil não for encontrado (PGRST116 = No rows found), criamos um novo.
     if (profileError && profileError.code !== 'PGRST116') {
         console.error('Erro ao buscar perfil:', profileError);
-        // Não retornamos aqui para tentar criar o perfil, caso o erro não seja de "não encontrado"
+        alert(`ERRO RLS/DB: Falha ao buscar perfil. Verifique RLS na tabela 'profiles'. Erro: ${profileError.message}`);
+        return;
     }
 
     if (profileData) {
@@ -76,6 +77,7 @@ export async function initializeGameState(user) {
 
     if (slimesError) {
         console.error('Erro ao carregar slimes:', slimesError);
+        alert(`ERRO RLS/DB: Falha ao carregar slimes. Verifique RLS na tabela 'user_slimes'. Erro: ${slimesError.message}`);
         return;
     }
     gameState.slimes = slimesData;
@@ -88,6 +90,7 @@ export async function initializeGameState(user) {
 
     if (customizationError) {
         console.error('Erro ao carregar customização:', customizationError);
+        alert(`ERRO RLS/DB: Falha ao carregar customização. Verifique RLS na tabela 'user_customization'. Erro: ${customizationError.message}`);
         return;
     }
     gameState.customization = customizationData;
@@ -106,6 +109,7 @@ export async function initializeGameState(user) {
 
     if (tasksError) {
         console.error('Erro ao carregar tarefas:', tasksError);
+        alert(`ERRO RLS/DB: Falha ao carregar tarefas. Verifique RLS na tabela 'user_tasks' e 'story_tasks'. Erro: ${tasksError.message}`);
         return;
     }
     gameState.tasks = tasksData;
