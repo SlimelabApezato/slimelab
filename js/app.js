@@ -65,9 +65,9 @@ function setupEventListeners() {
     // Formulário de Login
     document.getElementById('login-form').addEventListener('submit', (e) => {
         e.preventDefault();
-        const loginInput = document.getElementById('login-input').value;
+        const email = document.getElementById('login-input').value;
         const password = document.getElementById('password-login').value;
-        handleSignIn(loginInput, password);
+        handleSignIn(email, password);
     });
 
     // Login com Google
