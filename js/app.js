@@ -2,22 +2,15 @@
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import { LAB_ITEMS_DATA } from './data/lab_items_data.js';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/module.js';
+// A variável global 'supabase' será injetada pelo script no index.html
 import { handleSignUp, handleSignIn, handleGoogleSignIn, handleSignOut } from './logic/auth.js';
 import { initializeGameState, attemptCompleteTask } from './logic/game_state.js';
 import { initMatterEngine, dropSlime } from './logic/matter_engine.js';
 import { toggleScreens, toggleAuthMode, displayPasswordTooltip, renderHUD } from './logic/ui_render.js';
 import { getPasswordValidationMessage } from './utils.js';
 
-// Inicializa o cliente Supabase
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-        // A persistência é controlada aqui. O padrão é localStorage.
-        // Para simular "Não Lembrar", o usuário teria que usar o modo anônimo do navegador.
-        // O Supabase-js v2 não oferece uma maneira fácil de alternar entre localStorage e sessionStorage
-        // no momento do login. Manteremos o padrão (localStorage) e faremos a nota.
-    }
-});
+// Inicializa o cliente Supabase (Usando a variável global injetada no index.html)
+export const supabase = window.supabaseClient;
 
 // Função de inicialização principal
 async function initApp() {

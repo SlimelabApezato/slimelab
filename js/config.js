@@ -1,6 +1,15 @@
 // 🔑 CONFIGURAÇÃO CRÍTICA DO SUPABASE E CONSTANTES DO JOGO
 
 // O usuário deve inserir estas chaves após criar o projeto Supabase.
+
+// Inicialização do Supabase (para uso como variável global)
+// A variável 'supabase' é global, mas o 'createClient' não está disponível no escopo global.
+// Usaremos a função createClient diretamente.
+window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        // O padrão é localStorage, que é o que queremos para persistência de sessão.
+    }
+});
 export const SUPABASE_URL = "https://eyczdzawmadoofenxaag.supabase.co"; 
 export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5Y3pkemF3bWFkb29mZW54YWFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MTg3MTgsImV4cCI6MjA4MDA5NDcxOH0.aEfNzVYlWNVXgyo11k6T2UhwSAX-fQmoKjl2xekl0hg";
 

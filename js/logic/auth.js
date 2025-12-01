@@ -1,6 +1,6 @@
 // js/logic/auth.js
 
-import { supabase } from '../app.js';
+// A variável global 'supabase' será injetada pelo script no index.html
 import { isEmail, validatePassword, getPasswordValidationMessage } from '../utils.js';
 import { initializeGameState } from './game_state.js';
 import { toggleScreens, displayAuthError, displayPasswordTooltip } from './ui_render.js';

@@ -1,6 +1,6 @@
 // js/logic/game_state.js
 
-import { supabase } from '../app.js';
+// A variável global 'supabase' será injetada pelo script no index.html
 import { INITIAL_ENERGY, MAX_ENERGY, DIAMONDS_INITIAL, GOMA_COINS_INITIAL, STARS_FOR_ITEM_UNLOCK, STARS_FOR_WING_UNLOCK } from '../config.js';
 import { LAB_ITEMS_DATA } from '../data/lab_items_data.js';
 import { renderHUD } from './ui_render.js';
