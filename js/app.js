@@ -9,63 +9,26 @@ import { initMatterEngine, dropSlime } from './logic/matter_engine.js';
 import { toggleScreens, toggleAuthMode, displayPasswordTooltip, renderHUD } from './logic/ui_render.js';
 import { getPasswordValidationMessage } from './utils.js';
 
-// Inicializa o cliente Supabase (Usando a variável global injetada no index.html)
-export const supabase = window.supabaseClient;
+// Inicializa o cliente Supabase (Não usado na versão offline)
+export const supabase = null;
 
-// Função de inicialização principal
+// Função de inicialização principal (Versão Offline)
 async function initApp() {
-    // 1. Configurar Listeners de Eventos
-    setupEventListeners();
-
-    // 2. Gerenciar o Estado de Autenticação em Tempo Real
-    supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth State Change:', event, session);
-        if (session) {
-            // Usuário logado, inicializa o jogo
-            await initializeGameState(session.user);
-            initMatterEngine(); // Inicializa o motor de física
-            toggleScreens(true);
-        } else {
-            // Usuário deslogado, mostra a tela de login
-            toggleScreens(false);
-        }
-    });
+    // 1. Configurar Listeners de Eventos (Apenas os do jogo)
+    setupGasetupGameEventListeners()    // 2. Inicialização Direta do Jogo com Dados Mock
+    // O user mock é necessário para a função initializeGameState
+    const mockUser = {
+        id: 'mock-user-id-12345',
+        email: 'offline@slimes.lab',
+        user_metadata: { username: 'DrCROK_Offline' }
+    };
+    
+    await initializeGameState(mockUser);
+    initMatterEngine(); // Inicializa o motor de física
+    // A tela de jogo já está ativa no index.html
 }
 
-function setupEventListeners() {
-    // --- Listeners de Autenticação ---
-    
-    // Toggle Login/Cadastro
-    document.getElementById('toggle-login').addEventListener('click', () => toggleAuthMode('login'));
-    document.getElementById('toggle-signup').addEventListener('click', () => toggleAuthMode('signup'));
-
-    // Formulário de Cadastro
-    document.getElementById('signup-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = document.getElementById('username-signup').value;
-        const email = document.getElementById('email-signup').value;
-        const password = document.getElementById('password-signup').value;
-        const confirmPassword = document.getElementById('confirm-password-signup').value;
-        handleSignUp(username, email, password, confirmPassword);
-    });
-
-    // Validação de Senha em tempo real (para o tooltip)
-    document.getElementById('password-signup').addEventListener('input', (e) => {
-        const message = getPasswordValidationMessage(e.target.value);
-        displayPasswordTooltip(message);
-    });
-
-    // Formulário de Login
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-        e.preventDefault(); // GARANTIA DE QUE O RECARREGAMENTO É IMPEDIDO
-        const email = document.getElementById('login-input').value;
-        const password = document.getElementById('password-login').value;
-        handleSignIn(email, password);
-    });
-
-    // Login com Google
-    document.getElementById('google-login-btn').addEventListener('click', handleGoogleSignIn);
-
+function setupGameEventListeners() {
     // --- Listeners do Jogo ---
 
      // Event Listeners

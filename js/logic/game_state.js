@@ -1,6 +1,7 @@
 // js/logic/game_state.js
 
 // A variável global 'supabase' será injetada pelo script no index.html
+const supabase = null; // Versão Offline: Supabase é nulo
 import { INITIAL_ENERGY, MAX_ENERGY, DIAMONDS_INITIAL, GOMA_COINS_INITIAL, STARS_FOR_ITEM_UNLOCK, STARS_FOR_WING_UNLOCK } from '../config.js';
 import { LAB_ITEMS_DATA } from '../data/lab_items_data.js';
 import { renderHUD } from './ui_render.js';
@@ -22,105 +23,85 @@ export const gameState = {
  * @param {object} user - O objeto de usuário do Supabase.
  */
 export async function initializeGameState(user) {
+    // Versão Offline: Inicializa o estado com dados mock
     gameState.user = user;
-    const userId = user.id;
     
-    // 1. Buscar Perfil do Usuário
-    const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+    // 1. Perfil Mock
+    gameState.profile = {
+        id: user.id,
+        username: user.user_metadata.username || user.email.split('@')[0],
+        star_count: 10, // Suficiente para desbloquear a primeira ala
+        diamond_count: DIAMONDS_INITIAL * 10,
+        goma_coins: GOMA_COINS_INITIAL * 10,
+        current_energy: MAX_ENERGY,
+    };
 
-    // Se o perfil não for encontrado (PGRST116 = No rows found), criamos um novo.
-    if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Erro ao buscar perfil:', profileError);
-        alert(`ERRO RLS/DB: Falha ao buscar perfil. Verifique RLS na tabela 'profiles'. Erro: ${profileError.message}`);
-        return;
-    }
+    // 2. Slimes Mock (Um de cada Nível 1)
+    gameState.slimes = [
+        { id: 'mock-slime-1', color: 'Roxo', level: 1, quantity: 1 },
+        { id: 'mock-slime-2', color: 'Azul', level: 1, quantity: 1 },
+        { id: 'mock-slime-3', color: 'Verde', level: 1, quantity: 1 },
+        { id: 'mock-slime-4', color: 'Amarelo', level: 1, quantity: 1 },
+    ];
 
-    if (profileData) {
-        gameState.profile = profileData;
-    } else {
-        // 2. Criar Perfil se não existir (Primeiro Login)
-        const newProfile = {
-            id: userId,
-            // O username deve ser pego do metadata ou do email
-            username: user.user_metadata.username || user.email.split('@')[0],
-            star_count: 0,
-            diamond_count: DIAMONDS_INITIAL,
-            goma_coins: GOMA_COINS_INITIAL,
-            current_energy: INITIAL_ENERGY,
-            // Outros campos iniciais
-        };
-        
-        const { data: createdProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([newProfile])
-            .select()
-            .single();
-
-        if (createError) {
-            console.error('Erro ao criar perfil. Verifique as políticas RLS e o trigger SQL:', createError);
-            // Se não pudermos criar o perfil, o jogo não pode iniciar.
-            alert('Erro crítico: Não foi possível criar o perfil do usuário. Verifique as configurações RLS e o trigger SQL no Supabase.');
-            return;
+    // 3. Customização Mock (Primeiro item da Fusion Bay desbloqueado)
+    gameState.customization = [
+        { 
+            user_id: user.id, 
+            item_id: 'mesa_principal', 
+            item_wing: 'fusion_bay', 
+            is_unlocked: true,
+            skin_equipped: 'tech_neon'
         }
-        gameState.profile = createdProfile;
-    }
+    ];
 
-    // 3. Carregar Slimes
-    const { data: slimesData, error: slimesError } = await supabase
-        .from('user_slimes')
-        .select('*')
-        .eq('user_id', userId);
+    // 4. Tarefas Mock (3 tarefas ativas)
+    gameState.tasks = [
+        {
+            id: 'mock-task-1',
+            is_completed: false,
+            task: {
+                task_name: 'Limpar Frasco',
+                task_description: 'Gaste 10 de energia para limpar o frasco.',
+                wing_id: 'fusion_bay',
+                cost_type: 'goma_coins',
+                cost_amount: 100,
+                unlocks_item_id: 'mesa_principal'
+            }
+        },
+        {
+            id: 'mock-task-2',
+            is_completed: false,
+            task: {
+                task_name: 'Fundir Slimes',
+                task_description: 'Fundir 2 Slimes Roxo Nível 1.',
+                wing_id: 'fusion_bay',
+                cost_type: 'goma_coins',
+                cost_amount: 200,
+                unlocks_item_id: 'acelerador_quantico'
+            }
+        },
+        {
+            id: 'mock-task-3',
+            is_completed: false,
+            task: {
+                task_name: 'Coletar Goma',
+                task_description: 'Coletar 500 Goma Coins.',
+                wing_id: 'astro_garden',
+                cost_type: 'goma_coins',
+                cost_amount: 500,
+                unlocks_item_id: 'estufa_astro'
+            }
+        }
+    ];
 
-    if (slimesError) {
-        console.error('Erro ao carregar slimes:', slimesError);
-        alert(`ERRO RLS/DB: Falha ao carregar slimes. Verifique RLS na tabela 'user_slimes'. Erro: ${slimesError.message}`);
-        return;
-    }
-    gameState.slimes = slimesData;
+    // 5. Inicializar Spawner Charge
+    gameState.spawner_charge = 15;
 
-    // 4. Carregar Customização
-    const { data: customizationData, error: customizationError } = await supabase
-        .from('user_customization')
-        .select('*')
-        .eq('user_id', userId);
-
-    if (customizationError) {
-        console.error('Erro ao carregar customização:', customizationError);
-        alert(`ERRO RLS/DB: Falha ao carregar customização. Verifique RLS na tabela 'user_customization'. Erro: ${customizationError.message}`);
-        return;
-    }
-    gameState.customization = customizationData;
-
-    // 5. Carregar Tarefas Ativas (user_tasks)
-    const { data: tasksData, error: tasksError } = await supabase
-        .from('user_tasks')
-        .select(`
-            *,
-            task:story_tasks (task_name, task_description, wing_id, chapter_id, cost_type, cost_amount, unlocks_item_id)
-        `)
-        .eq('user_id', userId)
-        .eq('is_completed', false)
-        .order('chapter_id', { foreignTable: 'task', ascending: true })
-        .limit(3); // Limita a 3 tarefas ativas como no Homescapes
-
-    if (tasksError) {
-        console.error('Erro ao carregar tarefas:', tasksError);
-        alert(`ERRO RLS/DB: Falha ao carregar tarefas. Verifique RLS na tabela 'user_tasks' e 'story_tasks'. Erro: ${tasksError.message}`);
-        return;
-    }
-    gameState.tasks = tasksData;
-
-    // 6. Inicializar Spawner Charge (10 a 15 drops iniciais)
-    gameState.spawner_charge = Math.floor(Math.random() * (15 - 10 + 1)) + 10;
-
-    // 7. Renderizar HUD e UI
+    // 6. Renderizar HUD e UI
     renderHUD();
-    renderTasks(); // Nova função para renderizar tarefas
-    checkWingUnlock(); // Nova função para verificar desbloqueio de alas
+    renderTasks();
+    checkWingUnlock();
 }
 
 /**
@@ -135,15 +116,8 @@ export async function updateEnergy(amount) {
 
     gameState.profile.current_energy = newEnergy;
     
-    // Atualizar no Supabase
-    const { error } = await supabase
-        .from('profiles')
-        .update({ current_energy: newEnergy })
-        .eq('id', gameState.user.id);
-
-    if (error) {
-        console.error('Erro ao atualizar energia:', error);
-    }
+    // Versão Offline: Não atualiza o Supabase
+    console.log(`[OFFLINE] Energia atualizada para: ${newEnergy}`);
 
     renderHUD();
 }
@@ -158,15 +132,8 @@ export async function updateStarCount(amount) {
     const newStarCount = gameState.profile.star_count + amount;
     gameState.profile.star_count = newStarCount;
 
-    // Atualizar no Supabase
-    const { error } = await supabase
-        .from('profiles')
-        .update({ star_count: newStarCount })
-        .eq('id', gameState.user.id);
-
-    if (error) {
-        console.error('Erro ao atualizar estrelas:', error);
-    }
+    // Versão Offline: Não atualiza o Supabase
+    console.log(`[OFFLINE] Estrelas atualizadas para: ${newStarCount}`);
 
     // Verificar desbloqueios
     checkWingUnlock();
@@ -219,28 +186,12 @@ export async function attemptCompleteTask(taskId) {
     // 2. Atualizar o estado local
     gameState.profile.goma_coins = newCoins;
     
-    // 3. Atualizar o Supabase (Transação)
-    const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ goma_coins: newCoins })
-        .eq('id', gameState.profile.id);
+    // Versão Offline: Não atualiza o Supabase
+    console.log(`[OFFLINE] Custo de ${costAmount} deduzido. Goma Coins: ${newCoins}`);
 
-    if (updateError) {
-        console.error('Erro ao deduzir custo da tarefa:', updateError);
-        // Reverter estado local se necessário
-        return;
-    }
-
-    // 4. Marcar a tarefa como completa no Supabase
-    const { error: taskCompleteError } = await supabase
-        .from('user_tasks')
-        .update({ is_completed: true, completed_at: new Date().toISOString() })
-        .eq('id', taskId);
-
-    if (taskCompleteError) {
-        console.error('Erro ao marcar tarefa como completa:', taskCompleteError);
-        return;
-    }
+    // 4. Marcar a tarefa como completa (apenas no estado local para simulação)
+    task.is_completed = true;
+    task.completed_at = new Date().toISOString();
 
     // 5. Iniciar o processo de seleção de item (Homescapes)
     if (task.task.unlocks_item_id) {
@@ -262,25 +213,16 @@ export async function attemptCompleteTask(taskId) {
 export async function finalizeCustomization(itemId, skinId) {
     const userId = gameState.user.id;
 
-    // 1. Inserir o item desbloqueado na tabela user_customization
-    const { error: insertError } = await supabase
-        .from('user_customization')
-        .insert([
-            { 
-                user_id: userId, 
-                item_id: itemId, 
-                item_wing: gameState.current_task_to_complete.task.wing_id, // Pega a ala da tarefa
-                is_unlocked: true,
-                skin_equipped: skinId
-            }
-        ]);
+    // Versão Offline: Simula a inserção do item desbloqueado
+    gameState.customization.push({
+        user_id: userId, 
+        item_id: itemId, 
+        item_wing: gameState.current_task_to_complete.task.wing_id,
+        is_unlocked: true,
+        skin_equipped: skinId
+    });
 
-    if (insertError) {
-        console.error('Erro ao inserir item de customização:', insertError);
-        return;
-    }
-
-    // 2. Recarregar o estado do jogo
+    // 2. Recarregar o estado do jogo (Simulação)
     await initializeGameState(gameState.user);
     
     // 3. Fechar o modal
