@@ -76,7 +76,8 @@ export async function handleSignIn(loginInput, password) {
 
     // A inicialização do jogo e a transição de tela serão feitas pelo listener onAuthStateChange no app.js
     // após a detecção da sessão.
-    // Não é necessário fazer nada aqui além de retornar.
+    // Para garantir que o onAuthStateChange seja disparado, forçamos o recarregamento da página.
+    window.location.href = window.location.href;
 }
 
 /**
