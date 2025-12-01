@@ -50,40 +50,16 @@ export async function handleSignUp(username, email, password, confirmPassword) {
  * Lida com o processo de Login do usuário (Entrada Flexível).
  */
 export async function handleSignIn(loginInput, password) {
+    // Simplificação: O login deve ser feito APENAS com o email para evitar complexidade desnecessária
+    // na lógica de frontend e confiar no sistema de autenticação do Supabase.
     let email = loginInput;
 
-    // 1. Determinação: Se não for email, busca o email associado ao username
     if (!isEmail(loginInput)) {
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('id') // Busca o ID do usuário
-            .eq('username', loginInput)
-            .single();
-        
-        // Se encontrou o username, busca o email associado a esse ID na tabela auth.users
-        if (profile && profile.id) {
-            const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(profile.id);
-            if (authUser && authUser.user) {
-                email = authUser.user.email;
-            } else {
-                displayAuthError('Nome de Usuário ou Senha inválidos.');
-                return;
-            }
-        } else {
-            displayAuthError('Nome de Usuário ou Senha inválidos.');
-            return;
-        }
-
-        if (profileError || !profile) {
-            displayAuthError('Nome de Usuário ou Senha inválidos.');
-            return;
-        }
-        // O código anterior estava buscando 'user_email' que não existe na tabela profiles.
-        // O Supabase Auth lida com o email, vamos confiar na autenticação.
-        // Se o perfil for encontrado, a autenticação deve prosseguir.
+        displayAuthError('Por favor, use seu endereço de email para fazer login.');
+        return;
     }
 
-    // 2. Autenticação com Email e Senha
+    // 1. Autenticação com Email e Senha
     const rememberMe = document.getElementById('remember-me').checked;
     const persistence = rememberMe ? 'session' : 'session'; // Nota: A persistência é controlada globalmente na inicialização do cliente. A opção 'session' é mantida para fins de código, mas o Supabase-js v2 usa 'localStorage' por padrão.
 
@@ -94,12 +70,7 @@ export async function handleSignIn(loginInput, password) {
     
     // O erro de login é genérico para evitar ataques de enumeração de usuários
     if (error) {
-        displayAuthError('Nome de Usuário ou Senha inválidos.');
-        return;
-    }
-
-    if (error) {
-        displayAuthError('Nome de Usuário ou Senha inválidos.');
+        displayAuthError('Email ou Senha inválidos.');
         return;
     }
 
