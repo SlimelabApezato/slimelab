@@ -70,6 +70,7 @@ export async function handleSignIn(loginInput, password) {
     
     // O erro de login é genérico para evitar ataques de enumeração de usuários
     if (error) {
+        console.error('Erro de Autenticação Supabase:', error); // Log de erro para debug
         displayAuthError('Email ou Senha inválidos.');
         return;
     }
