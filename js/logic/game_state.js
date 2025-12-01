@@ -32,9 +32,10 @@ export async function initializeGameState(user) {
         .eq('id', userId)
         .single();
 
-    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = No rows found
+    // Se o perfil não for encontrado (PGRST116 = No rows found), criamos um novo.
+    if (profileError && profileError.code !== 'PGRST116') {
         console.error('Erro ao buscar perfil:', profileError);
-        return;
+        // Não retornamos aqui para tentar criar o perfil, caso o erro não seja de "não encontrado"
     }
 
     if (profileData) {
@@ -43,15 +44,13 @@ export async function initializeGameState(user) {
         // 2. Criar Perfil se não existir (Primeiro Login)
         const newProfile = {
             id: userId,
+            // O username deve ser pego do metadata ou do email
             username: user.user_metadata.username || user.email.split('@')[0],
-            max_score: 0,
-            current_energy: INITIAL_ENERGY,
             star_count: 0,
             diamond_count: DIAMONDS_INITIAL,
             goma_coins: GOMA_COINS_INITIAL,
-            is_paid_pass: false,
-            current_pass_level: 0,
-            story_progress_id: 'intro',
+            current_energy: INITIAL_ENERGY,
+            // Outros campos iniciais
         };
         
         const { data: createdProfile, error: createError } = await supabase
@@ -61,7 +60,9 @@ export async function initializeGameState(user) {
             .single();
 
         if (createError) {
-            console.error('Erro ao criar perfil:', createError);
+            console.error('Erro ao criar perfil. Verifique as políticas RLS e o trigger SQL:', createError);
+            // Se não pudermos criar o perfil, o jogo não pode iniciar.
+            alert('Erro crítico: Não foi possível criar o perfil do usuário. Verifique as configurações RLS e o trigger SQL no Supabase.');
             return;
         }
         gameState.profile = createdProfile;
