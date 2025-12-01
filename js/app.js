@@ -2,7 +2,7 @@
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import { LAB_ITEMS_DATA } from './data/lab_items_data.js';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/module.js';
 import { handleSignUp, handleSignIn, handleGoogleSignIn, handleSignOut } from './logic/auth.js';
 import { initializeGameState, attemptCompleteTask } from './logic/game_state.js';
 import { initMatterEngine, dropSlime } from './logic/matter_engine.js';
