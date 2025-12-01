@@ -4,7 +4,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import { LAB_ITEMS_DATA } from './data/lab_items_data.js';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import { handleSignUp, handleSignIn, handleGoogleSignIn, handleSignOut } from './logic/auth.js';
-import { iimport { initializeGameState, attemptCompleteTask } from './logic/game_state.js';;
+import { initializeGameState, attemptCompleteTask } from './logic/game_state.js';
 import { initMatterEngine, dropSlime } from './logic/matter_engine.js';
 import { toggleScreens, toggleAuthMode, displayPasswordTooltip, renderHUD } from './logic/ui_render.js';
 import { getPasswordValidationMessage } from './utils.js';
@@ -85,7 +85,6 @@ function setupEventListeners() {
             const taskId = e.target.dataset.taskId;
             attemptCompleteTask(taskId);
         }
-    });); // Chama a função de drop do Matter.js que gerencia o estado e o HUD
     });
 
     // Botão de Logout (Placeholder)

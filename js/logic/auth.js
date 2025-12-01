@@ -21,17 +21,10 @@ export async function handleSignUp(username, email, password, confirmPassword) {
         return;
     }
 
-    // 2. Validação de Unicidade do Nome de Usuário
-    const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('username', username)
-        .single();
-
-    if (existingUser) {
-        displayAuthError('Este Nome de Usuário já está em uso.');
-        return;
-    }
+    // 2. Validação de Unicidade do Nome de Usuário (Apenas se o username for diferente do email)
+    // O trigger SQL já garante a unicidade do username.
+    // Esta verificação é opcional, mas pode ser mantida para melhor UX.
+    // Por enquanto, vamos confiar no trigger do DB para simplificar o frontend.
 
     // 3. Criação do Usuário no Supabase Auth
     const { data, error } = await supabase.auth.signUp({
@@ -63,9 +56,23 @@ export async function handleSignIn(loginInput, password) {
     if (!isEmail(loginInput)) {
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('user_email') // Supondo que você tenha uma coluna 'user_email' na tabela profiles
+            .select('id') // Busca o ID do usuário
             .eq('username', loginInput)
             .single();
+        
+        // Se encontrou o username, busca o email associado a esse ID na tabela auth.users
+        if (profile && profile.id) {
+            const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(profile.id);
+            if (authUser && authUser.user) {
+                email = authUser.user.email;
+            } else {
+                displayAuthError('Nome de Usuário ou Senha inválidos.');
+                return;
+            }
+        } else {
+            displayAuthError('Nome de Usuário ou Senha inválidos.');
+            return;
+        }
 
         if (profileError || !profile) {
             displayAuthError('Nome de Usuário ou Senha inválidos.');
@@ -82,6 +89,12 @@ export async function handleSignIn(loginInput, password) {
         email: email,
         password: password,
     });
+    
+    // O erro de login é genérico para evitar ataques de enumeração de usuários
+    if (error) {
+        displayAuthError('Nome de Usuário ou Senha inválidos.');
+        return;
+    }
 
     if (error) {
         displayAuthError('Nome de Usuário ou Senha inválidos.');
@@ -89,8 +102,11 @@ export async function handleSignIn(loginInput, password) {
     }
 
     if (data.user) {
+        // O Supabase já lida com a persistência da sessão.
+        // A inicialização do jogo e a transição de tela devem ser feitas no app.js
+        // após a detecção da sessão.
+        // Para fins de teste imediato, vamos chamar a inicialização aqui.
         await initializeGameState(data.user);
-        initMatterEngine(); // Inicializa o motor de física
         toggleScreens(true);
     }
 }
@@ -101,6 +117,9 @@ export async function handleSignIn(loginInput, password) {
 export async function handleGoogleSignIn() {
     const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+            redirectTo: window.location.origin, // Redireciona de volta para a URL atual
+        }
     });
 
     if (error) {
