@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SlimeLab: Crônicas do Astro-Mundo</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <!-- Importação das bibliotecas obrigatórias -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+</head>
+<body>
+
+    <!-- 1. TELA DE LOGIN/CADASTRO (Inicial) -->
+    <div id="auth-screen" class="screen active">
+        <div class="auth-panel">
+            <h1 class="neon-text">SlimeLab Login</h1>
+            
+            <!-- Toggle Login/Cadastro -->
+            <div class="auth-toggle">
+                <button id="toggle-login" class="active">Login</button>
+                <button id="toggle-signup">Criar Conta</button>
+            </div>
+
+            <!-- Formulário de Login -->
+            <form id="login-form" class="auth-form active">
+                <input type="text" id="login-input" placeholder="Nome de Usuário ou Email" required>
+                <input type="password" id="password-login" placeholder="Senha" required>
+                
+                <div class="checkbox-container">
+                    <input type="checkbox" id="remember-me" checked>
+                    <label for="remember-me">Lembrar Conta</label>
+                </div>
+
+                <button type="submit" class="bubble-button primary">ACESSAR</button>
+                <div class="divider">OU</div>
+                <button type="button" id="google-login-btn" class="social-button google-btn">
+                    <img src="assets/img/ui/google-icon.svg" alt="Google Icon" style="width: 20px; height: 20px;"> Login com Google
+                </button>
+            </form>
+
+            <!-- Formulário de Cadastro -->
+            <form id="signup-form" class="auth-form">
+                <input type="text" id="username-signup" placeholder="Seu Nome Slime" required>
+                <input type="email" id="email-signup" placeholder="Email" required>
+                <input type="password" id="password-signup" placeholder="Senha" required>
+                <input type="password" id="confirm-password-signup" placeholder="Confirmar Senha" required>
+                
+                <div id="password-tooltip" class="tooltip neon-purple">
+                    Mínimo 8 caracteres, 1 Maiúscula, 1 Minúscula.
+                </div>
+
+                <button type="submit" class="bubble-button secondary">CRIAR CONTA</button>
+            </form>
+
+            <p id="auth-error-message" class="error-message"></p>
+        </div>
+    </div>
+
+    <!-- 2. TELA PRINCIPAL DO JOGO (Laboratório) -->
+    <div id="game-screen" class="screen">
+        
+        <!-- HUD Superior -->
+        <header id="hud">
+            <!-- Barra de Energia (SVG será injetado aqui) -->
+            <div id="energy-bar-container" class="hud-item">
+                <svg id="energy-svg" viewBox="0 0 100 10" width="200" height="20">
+                    <!-- Placeholder para o fundo da barra -->
+                    <rect x="0" y="0" width="100" height="10" fill="#333" rx="5"/>
+                    <!-- Barra de preenchimento (será manipulada via JS/CSS) -->
+                    <rect id="energy-fill" x="0" y="0" width="100" height="10" fill="url(#neon-gradient)" rx="5"/>
+                    <!-- Definição do gradiente neon -->
+                    <defs>
+                        <linearGradient id="neon-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:rgb(255,100,0);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:rgb(255,255,0);stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span id="energy-text">100/100</span>
+            </div>
+
+            <!-- Moedas -->
+            <div class="hud-item">
+                <span id="diamond-count">💎 10</span>
+                <span id="goma-coin-count">💰 5000</span>
+            </div>
+
+            <!-- Spawner de Slime -->
+            <button id="slime-spawner-btn" class="bubble-button action-button">
+                DROP SLIME (10)
+            </button>
+        </header>
+
+        <!-- Área Central do Jogo -->
+        <main id="game-area">
+            
+            <!-- Frasco de Fusão (Matter.js Engine) -->
+            <div id="fusion-flask-container">
+                <div id="matter-canvas">
+                    <!-- O Matter.js renderizará o canvas aqui -->
+                </div>
+            </div>
+
+            <!-- Laboratório (Customização e Alas) -->
+            <div id="lab-customization-area">
+                <!-- Estrutura de Grid para o Laboratório -->
+                <div id="lab-grid">
+                    <!-- Alas do Laboratório (Placeholders) -->
+                    <div id="fusion-bay" class="lab-wing active">
+                        <h2 class="neon-text">Fusion Bay</h2>
+                        <!-- Itens de Customização (Placeholders) -->
+                        <div class="lab-item" style="grid-area: center;">Mesa Central</div>
+                        <div class="lab-item" style="grid-area: left-rack;">Tubos de Teste</div>
+                        <div class="lab-item" style="grid-area: seat;">Cadeira</div>
+                    </div>
+                    
+                    <div id="astro-garden" class="lab-wing fog-overlay">
+                        <h2 class="neon-text">Astro-Garden (5 Estrelas)</h2>
+                    </div>
+                    
+                    <div id="quantum-accelerator" class="lab-wing fog-overlay">
+                        <h2 class="neon-text">Quantum Accelerator (10 Estrelas)</h2>
+                    </div>
+                    
+                    <div id="relic-chamber" class="lab-wing fog-overlay">
+                        <h2 class="neon-text">Relic Restoration Chamber (15 Estrelas)</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Painel de Tarefas da História (Homescapes Model) -->
+            <aside id="side-panel">
+                <div id="star-count">⭐ 0 Estrelas</div>
+                <div id="tasks-panel" class="panel">
+                    <h3 class="neon-text">Restauração do Laboratório</h3>
+                    <ul id="task-list">
+                        <!-- Tarefas serão injetadas aqui -->
+                        <li class="task-item">
+                            <span class="task-title">Limpar a Mesa Central</span>
+                            <span class="task-cost">100 Goma Coins</span>
+                            <button class="bubble-button small complete-task-btn" data-task-id="placeholder">Concluir</button>
+                        </li>
+                    </ul>
+                </div>
+                <button id="open-shop-btn" class="bubble-button primary">Diamond Shop</button>
+            </aside>
+        </main>
+
+        <!-- Modais (Passe, Loja, Missões) -->
+        <div id="modal-container">
+            <!-- Placeholder para Modais -->
+        </div>
+
+    </div>
+
+    <!-- Modal de Seleção de Item (Homescapes Model) -->
+    <div id="item-selection-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="neon-text">Escolha o Design para [Nome do Item]</h2>
+            <p>Selecione a skin que deseja instalar no seu laboratório.</p>
+            <div id="skin-options" class="skin-options-grid">
+                <!-- Opções de Skin serão injetadas aqui -->
+                <div class="skin-option active" data-skin="tech_neon">
+                    <img src="assets/img/lab_items/mesa_central_tech_neon.png" alt="Tech Neon Skin">
+                    <p>Tech Neon</p>
+                </div>
+            </div>
+            <button id="confirm-skin-btn" class="bubble-button primary">Confirmar Escolha</button>
+        </div>
+    </div>
+
+    <!-- Scripts do Jogo -->
+    <script type="module" src="js/config.js"></script>
+    <script type="module" src="js/utils.js"></script>
+    <script type="module" src="js/logic/auth.js"></script>
+    <script type="module" src="js/logic/game_state.js"></script>
+    <script type="module" src="js/logic/matter_engine.js"></script>
+    <script type="module" src="js/logic/ui_render.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
