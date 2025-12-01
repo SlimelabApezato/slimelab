@@ -24,18 +24,19 @@ async function initApp() {
     // 1. Configurar Listeners de Eventos
     setupEventListeners();
 
-    // 2. Verificar Sessão Existente
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (session) {
-        // Usuário logado, inicializa o jogo
-        await initializeGameState(session.user);
-        initMatterEngine(); // Inicializa o motor de física
-        toggleScreens(true);
-    } else {
-        // Usuário deslogado, mostra a tela de login
-        toggleScreens(false);
-    }
+    // 2. Gerenciar o Estado de Autenticação em Tempo Real
+    supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth State Change:', event, session);
+        if (session) {
+            // Usuário logado, inicializa o jogo
+            await initializeGameState(session.user);
+            initMatterEngine(); // Inicializa o motor de física
+            toggleScreens(true);
+        } else {
+            // Usuário deslogado, mostra a tela de login
+            toggleScreens(false);
+        }
+    });
 }
 
 function setupEventListeners() {

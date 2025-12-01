@@ -78,7 +78,9 @@ export async function handleSignIn(loginInput, password) {
             displayAuthError('Nome de Usuário ou Senha inválidos.');
             return;
         }
-        email = profile.user_email;
+        // O código anterior estava buscando 'user_email' que não existe na tabela profiles.
+        // O Supabase Auth lida com o email, vamos confiar na autenticação.
+        // Se o perfil for encontrado, a autenticação deve prosseguir.
     }
 
     // 2. Autenticação com Email e Senha
@@ -101,14 +103,9 @@ export async function handleSignIn(loginInput, password) {
         return;
     }
 
-    if (data.user) {
-        // O Supabase já lida com a persistência da sessão.
-        // A inicialização do jogo e a transição de tela devem ser feitas no app.js
-        // após a detecção da sessão.
-        // Para fins de teste imediato, vamos chamar a inicialização aqui.
-        await initializeGameState(data.user);
-        toggleScreens(true);
-    }
+    // A inicialização do jogo e a transição de tela serão feitas pelo listener onAuthStateChange no app.js
+    // após a detecção da sessão.
+    // Não é necessário fazer nada aqui além de retornar.
 }
 
 /**
